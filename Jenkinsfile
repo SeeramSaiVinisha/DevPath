@@ -16,7 +16,7 @@ pipeline {
             steps {
                 bat 'git --version'
                 bat 'java -version'
-                bat 'docker --version'
+                bat 'bat '"C:\\Users\\ASUS\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" --version''
                 bat 'python --version'
             }
         }
