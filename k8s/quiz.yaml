@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devpath-quiz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devpath-quiz
+  template:
+    metadata:
+      labels:
+        app: devpath-quiz
+    spec:
+      containers:
+        - name: quiz
+          image: devpath-quiz:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devpath-quiz
+spec:
+  type: NodePort
+  selector:
+    app: devpath-quiz
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30050
