@@ -3,7 +3,6 @@ pipeline {
 
     options {
         timestamps()
-        disableConcurrentBuilds()
     }
 
     stages {
@@ -13,10 +12,25 @@ pipeline {
             }
         }
 
+        stage('Check Tools') {
+            steps {
+                bat 'git --version'
+                bat 'java -version'
+                bat 'docker --version'
+                bat 'python --version'
+            }
+        }
+
         stage('Build and Test Spring Boot') {
             steps {
                 dir('backend') {
-                    sh 'mvn -B clean test package'
+                    script {
+                        if (fileExists('mvnw.cmd')) {
+                            bat 'mvnw.cmd -B clean package'
+                        } else {
+                            bat 'mvn -B clean package'
+                        }
+                    }
                 }
             }
         }
@@ -24,30 +38,27 @@ pipeline {
         stage('Test Flask Service') {
             steps {
                 dir('quiz-service') {
-                    sh 'python3 -m pip install -r requirements.txt'
-                    sh 'python3 -m unittest discover -s tests -v'
+                    bat 'python -m pip install -r requirements.txt'
+                    bat 'python -m unittest discover -s tests -v'
                 }
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                sh 'docker build -t devpath-backend:${BUILD_NUMBER} ./backend'
-                sh 'docker build -t devpath-quiz:${BUILD_NUMBER} ./quiz-service'
-                sh 'docker build -t devpath-frontend:${BUILD_NUMBER} ./frontend'
+                bat 'docker build -t devpath-backend:1.0 ./backend'
+                bat 'docker build -t devpath-quiz:1.0 ./quiz-service'
+                bat 'docker build -t devpath-frontend:1.0 ./frontend'
             }
         }
     }
 
     post {
         success {
-            echo 'DevPath build and tests completed successfully.'
+            echo 'DevPath CI pipeline completed successfully.'
         }
         failure {
-            echo 'DevPath pipeline failed. Review the stage logs.'
-        }
-        always {
-            echo 'Pipeline execution finished.'
+            echo 'DevPath CI pipeline failed. Review the Console Output.'
         }
     }
 }
